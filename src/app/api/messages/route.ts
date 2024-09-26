@@ -82,7 +82,7 @@ export const DELETE = async (request: Request): Promise<NextResponse> => {
 
   const body: RequestBody = await request.json();
   const { roomId, messageId } = body;
-  const foundMessage = (<Database>DB).messages.find((x: { messageId: any; roomId: string; }) => x.messageId === messageId && x.roomId === roomId);
+  const foundMessage = (<Database>DB).messages.find((x: { messageId: string; roomId: string; }) => x.messageId === messageId && x.roomId === roomId);
   if (!foundMessage) {
     return NextResponse.json(
       {
@@ -93,7 +93,7 @@ export const DELETE = async (request: Request): Promise<NextResponse> => {
     );
   }
 
-  (<Database>DB).messages = (<Database>DB).messages.filter((x: { messageId: any; }) => x.messageId !== messageId);
+  (<Database>DB).messages = (<Database>DB).messages.filter((x: { messageId: string; }) => x.messageId !== messageId);
 
   writeDB();
 

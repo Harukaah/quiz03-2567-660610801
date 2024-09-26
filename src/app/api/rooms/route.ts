@@ -1,46 +1,66 @@
-import { DB, readDB, writeDB } from "@lib/DB";
+import { Database, DB, readDB, writeDB, } from "@lib/DB";
 import { checkToken } from "@lib/checkToken";
 import { nanoid } from "nanoid";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export const GET = async () => {
-  readDB();
+
+
+interface RequestBody {
+  roomName: string;
+}
+
+export const GET = async (): Promise<NextResponse> => {
+  readDB();  
+  const rooms = (<Database>DB).rooms;
+  const totalRooms = rooms.length;
+  
   return NextResponse.json({
     ok: true,
-    //rooms:
-    //totalRooms:
+    rooms,
+    totalRooms,
   });
 };
 
-export const POST = async (request: NextRequest) => {
+export const POST = async (request: Request): Promise<NextResponse> => {
   const payload = checkToken();
-
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Invalid token",
-  //   },
-  //   { status: 401 }
-  // );
+  
+  if (!payload) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid token",
+      },
+      { status: 401 }
+    );
+  }
 
   readDB();
-
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: `Room ${"replace this with room name"} already exists`,
-  //   },
-  //   { status: 400 }
-  // );
+  const body: RequestBody = await request.json();
+  const { roomName } = body;
+  
+  const foundRoom = (<Database>DB).rooms.find((x: { roomName: string; }) => x.roomName === roomName);
+  if (foundRoom) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `Room ${roomName} already exists`,
+      },
+      { status: 400 }
+    );
+  }
 
   const roomId = nanoid();
 
-  //call writeDB after modifying Database
-  writeDB();
+  (<Database>DB).rooms.push({
+    roomId,
+    roomName,
+  });
+
+  writeDB(); 
 
   return NextResponse.json({
     ok: true,
-    //roomId,
-    message: `Room ${"replace this with room name"} has been created`,
+    roomId,
+    message: `Room ${roomName} has been created`,
   });
 };
